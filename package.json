@@ -1,0 +1,78 @@
+{
+  "name": "vs-code-lm-extension",
+  "displayName": "VS Code Language Model Tools",
+  "description": "VS Code extension providing tools for language model integration",
+  "version": "0.0.1",
+  "publisher": "shannonlal",
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vs-code-lm-extension.listOpenEditors",
+        "title": "List Open Editors"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "vscode-lm-tools_listOpenEditors",
+        "tags": ["editors"],
+        "toolReferenceName": "listOpenEditors",
+        "displayName": "List Open Editors",
+        "modelDescription": "Lists all open editors in VS Code with their details including file paths, language types, and status (dirty/clean, active/inactive)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false,
+          "description": "No parameters required"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.97.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "eslint": "^9.19.0",
+    "esbuild": "^0.24.2",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.7.3",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shannonlal/vs-code-lm-extension.git"
+  },
+  "keywords": [
+    "vscode",
+    "language model",
+    "tools",
+    "extension"
+  ],
+  "license": "MIT"
+}
