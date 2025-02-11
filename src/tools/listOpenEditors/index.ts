@@ -7,14 +7,13 @@ import {
 } from '../../types/listOpenEditors';
 import { 
     EditorAccessError, 
-    NoEditorsOpenError, 
-    UserCancellationError 
+    NoEditorsOpenError
 } from '../../errors';
 
 /**
  * Tool for listing all open editors in VS Code
  */
-export class ListOpenEditorsTool {
+export class ListOpenEditorsTool implements vscode.LanguageModelTool<ListOpenEditorsParams> {
     readonly name = 'vscode-lm-tools_listOpenEditors';
     readonly tags = ['editors'];
     readonly toolReferenceName = 'listOpenEditors';
@@ -22,26 +21,59 @@ export class ListOpenEditorsTool {
     readonly modelDescription = 'Lists all open editors in VS Code with their details';
 
     /**
-     * Ask for user confirmation before listing editors
+     * Prepare the tool invocation with user confirmation
      */
-    async prepareInvocation(): Promise<boolean> {
-        const result = await vscode.window.showInformationMessage(
-            'The language model would like to list all open editors. Continue?',
-            'Yes',
-            'No'
-        );
+    async prepareInvocation(
+        _options: vscode.LanguageModelToolInvocationPrepareOptions<ListOpenEditorsParams>,
+        _token: vscode.CancellationToken
+    ): Promise<vscode.PreparedToolInvocation> {
+        return {
+            invocationMessage: 'Listing open editors',
+            confirmationMessages: {
+                title: 'List Open Editors',
+                message: new vscode.MarkdownString('List all open editors in VS Code?')
+            }
+        };
+    }
 
-        if (result !== 'Yes') {
-            throw new UserCancellationError(this.name);
+    /**
+     * Execute the tool to list open editors
+     */
+    async invoke(
+        _options: vscode.LanguageModelToolInvocationOptions<ListOpenEditorsParams>,
+        token: vscode.CancellationToken
+    ): Promise<vscode.LanguageModelToolResult> {
+        try {
+            // Check for cancellation
+            if (token.isCancellationRequested) {
+                return new vscode.LanguageModelToolResult([
+                    new vscode.LanguageModelTextPart('Operation cancelled')
+                ]);
+            }
+
+            const { editors, activeEditor } = await this.getEditorInfo();
+            const formattedText = this.formatEditorList(editors, activeEditor);
+            
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(formattedText)
+            ]);
+        } catch (error) {
+            if (error instanceof NoEditorsOpenError) {
+                return new vscode.LanguageModelToolResult([
+                    new vscode.LanguageModelTextPart('No editors are currently open')
+                ]);
+            }
+            throw new EditorAccessError(
+                error instanceof Error ? error.message : 'Unknown error occurred'
+            );
         }
-
-        return true;
     }
 
     /**
      * Format the editor information into a readable string
+     * Protected to allow access from test subclass
      */
-    formatEditorList(editors: EditorInfo[], activeEditor?: EditorInfo): string {
+    protected formatEditorList(editors: EditorInfo[], activeEditor?: EditorInfo): string {
         const lines: string[] = [];
         
         lines.push(`Found ${editors.length} open editor${editors.length === 1 ? '' : 's'}:`);
@@ -62,8 +94,9 @@ export class ListOpenEditorsTool {
 
     /**
      * Get information about all open editors
+     * Protected to allow access from test subclass
      */
-    async getEditorInfo(): Promise<{ editors: EditorInfo[], activeEditor?: EditorInfo }> {
+    protected async getEditorInfo(): Promise<{ editors: EditorInfo[], activeEditor?: EditorInfo }> {
         const editors = vscode.window.visibleTextEditors;
             
         if (!editors || editors.length === 0) {
@@ -87,34 +120,5 @@ export class ListOpenEditorsTool {
  */
 export function registerListOpenEditorsTool(_context: vscode.ExtensionContext): vscode.Disposable {
     const tool = new ListOpenEditorsTool();
-    
-    return vscode.lm.registerTool(tool.name, {
-        async invoke(_options: vscode.LanguageModelToolInvocationOptions<ListOpenEditorsParams>): Promise<vscode.LanguageModelToolResult> {
-            try {
-                await tool.prepareInvocation();
-                const { editors, activeEditor } = await tool.getEditorInfo();
-                
-                return {
-                    content: [{
-                        type: 'text',
-                        text: tool.formatEditorList(editors, activeEditor)
-                    }]
-                };
-            } catch (error) {
-                if (error instanceof NoEditorsOpenError || 
-                    error instanceof UserCancellationError) {
-                    return {
-                        content: [{
-                            type: 'text',
-                            text: error.message
-                        }]
-                    };
-                }
-
-                throw new EditorAccessError(
-                    error instanceof Error ? error.message : 'Unknown error occurred'
-                );
-            }
-        }
-    });
+    return vscode.lm.registerTool(tool.name, tool);
 }

@@ -2,13 +2,26 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { ListOpenEditorsTool } from '../tools/listOpenEditors';
 import { EditorInfo } from '../types/listOpenEditors';
-import { NoEditorsOpenError, UserCancellationError } from '../errors';
+import { NoEditorsOpenError } from '../errors';
+
+// Create a test-specific subclass to access protected methods
+class TestListOpenEditorsTool extends ListOpenEditorsTool {
+    // These methods are already protected in the parent class,
+    // so we can access them directly in tests
+    public async getEditorInfoTest(): Promise<{ editors: EditorInfo[], activeEditor?: EditorInfo }> {
+        return this.getEditorInfo();
+    }
+
+    public formatEditorListTest(editors: EditorInfo[], activeEditor?: EditorInfo): string {
+        return this.formatEditorList(editors, activeEditor);
+    }
+}
 
 suite('ListOpenEditors Tool Test Suite', () => {
-    let tool: ListOpenEditorsTool;
+    let tool: TestListOpenEditorsTool;
 
     setup(() => {
-        tool = new ListOpenEditorsTool();
+        tool = new TestListOpenEditorsTool();
     });
 
     test('Tool has correct metadata', () => {
@@ -39,7 +52,7 @@ suite('ListOpenEditors Tool Test Suite', () => {
             }
         ];
 
-        const result = tool.formatEditorList(mockEditors, mockEditors[0]);
+        const result = tool.formatEditorListTest(mockEditors, mockEditors[0]);
         
         assert.ok(result.includes('Found 2 open editors'));
         assert.ok(result.includes('file1.ts (typescript) [active]'));
@@ -56,7 +69,7 @@ suite('ListOpenEditors Tool Test Suite', () => {
 
         try {
             await assert.rejects(
-                () => tool.getEditorInfo(),
+                () => tool.getEditorInfoTest(),
                 NoEditorsOpenError
             );
         } finally {
@@ -67,33 +80,61 @@ suite('ListOpenEditors Tool Test Suite', () => {
         }
     });
 
-    test('prepareInvocation handles user cancellation', async () => {
-        // Mock window.showInformationMessage to simulate 'No' response
-        const showMessage = vscode.window.showInformationMessage;
-        vscode.window.showInformationMessage = async () => 'No';
+    test('prepareInvocation returns correct result', async () => {
+        const token = new vscode.CancellationTokenSource().token;
+        const options: vscode.LanguageModelToolInvocationPrepareOptions<{}> = {
+            input: {}
+        };
+
+        const result = await tool.prepareInvocation(options, token);
+        
+        assert.ok(result.invocationMessage);
+        assert.ok(result.confirmationMessages);
+        assert.strictEqual(typeof result.confirmationMessages.title, 'string');
+        assert.ok(result.confirmationMessages.message instanceof vscode.MarkdownString);
+    });
+
+    test('invoke handles no editors', async () => {
+        const token = new vscode.CancellationTokenSource().token;
+        const options: vscode.LanguageModelToolInvocationOptions<{}> = {
+            input: {},
+            toolInvocationToken: undefined
+        };
+
+        // Mock empty editors array
+        const originalVisibleEditors = vscode.window.visibleTextEditors;
+        Object.defineProperty(vscode.window, 'visibleTextEditors', {
+            get: () => []
+        });
 
         try {
-            await assert.rejects(
-                () => tool.prepareInvocation(),
-                UserCancellationError
-            );
+            const result = await tool.invoke(options, token);
+            assert.ok(result instanceof vscode.LanguageModelToolResult);
+            const content = result.content[0];
+            assert.ok(content instanceof vscode.LanguageModelTextPart);
+            assert.strictEqual(content.value, 'No editors are currently open');
         } finally {
             // Restore original
-            vscode.window.showInformationMessage = showMessage;
+            Object.defineProperty(vscode.window, 'visibleTextEditors', {
+                get: () => originalVisibleEditors
+            });
         }
     });
 
-    test('prepareInvocation proceeds with user confirmation', async () => {
-        // Mock window.showInformationMessage to simulate 'Yes' response
-        const showMessage = vscode.window.showInformationMessage;
-        vscode.window.showInformationMessage = async () => 'Yes';
+    test('invoke handles cancellation', async () => {
+        const tokenSource = new vscode.CancellationTokenSource();
+        const options: vscode.LanguageModelToolInvocationOptions<{}> = {
+            input: {},
+            toolInvocationToken: undefined
+        };
 
-        try {
-            const result = await tool.prepareInvocation();
-            assert.strictEqual(result, true);
-        } finally {
-            // Restore original
-            vscode.window.showInformationMessage = showMessage;
-        }
+        // Cancel the token
+        tokenSource.cancel();
+
+        const result = await tool.invoke(options, tokenSource.token);
+        assert.ok(result instanceof vscode.LanguageModelToolResult);
+        const content = result.content[0];
+        assert.ok(content instanceof vscode.LanguageModelTextPart);
+        assert.strictEqual(content.value, 'Operation cancelled');
     });
 });
