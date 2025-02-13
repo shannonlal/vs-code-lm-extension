@@ -19,6 +19,14 @@
       {
         "command": "vs-code-lm-extension.listOpenEditors",
         "title": "List Open Editors"
+      },
+      {
+        "command": "vs-code-lm-extension.getConfigurationSetting",
+        "title": "Get Configuration Setting"
+      },
+      {
+        "command": "vs-code-lm-extension.revealFileInExplorer",
+        "title": "Reveal File in Explorer"
       }
     ],
     "languageModelTools": [
@@ -33,6 +41,42 @@
           "properties": {},
           "additionalProperties": false,
           "description": "No parameters required"
+        }
+      },
+      {
+        "name": "vscode-lm-tools_getConfigurationSetting",
+        "tags": ["configuration"],
+        "toolReferenceName": "getConfigurationSetting",
+        "displayName": "Get Configuration Setting",
+        "modelDescription": "Retrieves the value of a specified VS Code configuration setting",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "settingName": {
+              "type": "string",
+              "description": "Name of the VS Code setting to retrieve"
+            }
+          },
+          "required": ["settingName"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "vscode-lm-tools_revealFileInExplorer",
+        "tags": ["explorer", "navigation"],
+        "toolReferenceName": "revealFileInExplorer",
+        "displayName": "Reveal File in Explorer",
+        "modelDescription": "Reveals and selects a specified file in the VS Code Explorer sidebar",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Path to the file to reveal"
+            }
+          },
+          "required": ["filePath"],
+          "additionalProperties": false
         }
       }
     ]
