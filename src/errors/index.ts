@@ -59,6 +59,26 @@ export class UserCancellationError extends VSCodeLMExtensionError {
 }
 
 /**
+ * Error thrown when an invalid setting name is provided
+ */
+export class InvalidSettingError extends VSCodeLMExtensionError {
+    constructor(settingName: string) {
+        super(`Invalid setting name: ${settingName}`);
+        this.name = 'InvalidSettingError';
+    }
+}
+
+/**
+ * Error thrown when there's a problem accessing configuration settings
+ */
+export class ConfigurationAccessError extends VSCodeLMExtensionError {
+    constructor(details: string) {
+        super(`Failed to access configuration: ${details}`);
+        this.name = 'ConfigurationAccessError';
+    }
+}
+
+/**
  * Convert any error to a user-friendly message
  */
 export function toUserFriendlyError(error: unknown): string {
