@@ -32,11 +32,76 @@ The tool will:
 
 #### Manual Usage
 
-The extension also provides a command palette entry:
+The extension provides a command palette entry:
 
 1. Open the command palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
 2. Search for "List Open Editors"
 3. Select an editor from the list to focus it
+
+### Get Configuration Setting Tool
+
+The Get Configuration Setting tool allows language models to retrieve VS Code configuration settings. This includes:
+
+- Setting name and value
+- Setting scope (user, workspace, or workspace folder)
+- Default and overridden values
+
+#### Usage in Language Models
+
+```typescript
+// Example tool invocation
+await vscode.lm.invokeTool("vscode-lm-tools_getConfigurationSetting", {
+  settingName: "editor.fontSize",
+});
+```
+
+The tool will:
+
+1. Request user confirmation
+2. Retrieve the specified setting
+3. Return formatted results including:
+   - Setting value
+   - Setting scope
+   - Any overrides
+
+#### Manual Usage
+
+The extension provides a command palette entry:
+
+1. Open the command palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+2. Search for "Get Configuration Setting"
+3. Enter the setting name to retrieve its value
+
+### Reveal File in Explorer Tool
+
+The Reveal File in Explorer tool enables language models to highlight specific files in the VS Code Explorer sidebar. This is useful for:
+
+- Drawing attention to specific files
+- Helping users locate files
+- Navigation assistance
+
+#### Usage in Language Models
+
+```typescript
+// Example tool invocation
+await vscode.lm.invokeTool("vscode-lm-tools_revealFileInExplorer", {
+  filePath: "/path/to/file.txt",
+});
+```
+
+The tool will:
+
+1. Request user confirmation
+2. Locate the specified file
+3. Reveal and select it in the Explorer sidebar
+
+#### Manual Usage
+
+The extension provides a command palette entry:
+
+1. Open the command palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+2. Search for "Reveal File in Explorer"
+3. Select a file from the list to reveal it
 
 ## Installation
 
