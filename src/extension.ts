@@ -1,13 +1,19 @@
 import * as vscode from 'vscode';
 import { registerListOpenEditorsTool } from './tools/listOpenEditors';
+import { registerGetConfigurationSettingTool } from './tools/getConfigurationSetting';
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
     console.log('VS Code Language Model Tools extension is now active');
 
-    // Register the Language Model tool
+    // Register the Language Model tools
     const listOpenEditorsTool = registerListOpenEditorsTool(context);
-    context.subscriptions.push(listOpenEditorsTool);
+    const getConfigurationSettingTool = registerGetConfigurationSettingTool(context);
+    
+    context.subscriptions.push(
+        listOpenEditorsTool,
+        getConfigurationSettingTool
+    );
 
     // Register the listOpenEditors command for backward compatibility
     const listOpenEditorsCommand = vscode.commands.registerCommand('vs-code-lm-extension.listOpenEditors', async () => {
