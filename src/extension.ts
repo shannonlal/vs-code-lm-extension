@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { registerListOpenEditorsTool } from './tools/listOpenEditors';
 import { registerGetConfigurationSettingTool } from './tools/getConfigurationSetting';
+import { registerRevealFileInExplorerTool } from './tools/revealFileInExplorer';
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -9,10 +10,12 @@ export function activate(context: vscode.ExtensionContext) {
     // Register the Language Model tools
     const listOpenEditorsTool = registerListOpenEditorsTool(context);
     const getConfigurationSettingTool = registerGetConfigurationSettingTool(context);
+    const revealFileInExplorerTool = registerRevealFileInExplorerTool(context);
     
     context.subscriptions.push(
         listOpenEditorsTool,
-        getConfigurationSettingTool
+        getConfigurationSettingTool,
+        revealFileInExplorerTool
     );
 
     // Register the listOpenEditors command for backward compatibility

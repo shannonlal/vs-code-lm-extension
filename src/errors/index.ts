@@ -79,6 +79,16 @@ export class ConfigurationAccessError extends VSCodeLMExtensionError {
 }
 
 /**
+ * Error thrown when a file cannot be found or accessed
+ */
+export class FileNotFoundError extends VSCodeLMExtensionError {
+    constructor(filePath: string) {
+        super(`File not found or cannot be accessed: ${filePath}`);
+        this.name = 'FileNotFoundError';
+    }
+}
+
+/**
  * Convert any error to a user-friendly message
  */
 export function toUserFriendlyError(error: unknown): string {

@@ -97,16 +97,16 @@ export class GetConfigurationSettingTool implements vscode.LanguageModelTool<Get
         settingName: string
     ): 'user' | 'workspace' | 'workspaceFolder' | undefined {
         const inspection = config.inspect(settingName);
-        if (!inspection) return undefined;
+        if (!inspection) {return undefined;}
 
         // Check for explicitly set values first
-        if (inspection.workspaceFolderValue !== undefined) return 'workspaceFolder';
-        if (inspection.workspaceValue !== undefined) return 'workspace';
-        if (inspection.globalValue !== undefined) return 'user';
+        if (inspection.workspaceFolderValue !== undefined) {return 'workspaceFolder';}
+        if (inspection.workspaceValue !== undefined) {return 'workspace';}
+        if (inspection.globalValue !== undefined) {return 'user';}
         
         // If there's a default value but no explicit setting, consider it user scope
         // since that's where VS Code stores default values
-        if (inspection.defaultValue !== undefined) return 'user';
+        if (inspection.defaultValue !== undefined) {return 'user';}
         
         return undefined;
     }
